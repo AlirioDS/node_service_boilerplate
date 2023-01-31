@@ -1,0 +1,68 @@
+version: "3.8"
+
+volumes:
+  db_postgres:
+  db_mongo:
+  pgadmin_data:
+
+services:
+  mongo:
+    container_name: mongo
+    image: mongo:4.4
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: rootpassword
+    env_file:
+      - ./.env
+    ports:
+      - '27017:27017'
+    restart: on-failure
+    volumes:
+      - db_mongo:/data/db
+
+  postgres:
+    container_name: postgres
+    image: postgres:12.9
+    ports:
+      - '5432:5432'
+    restart: on-failure
+    env_file:
+      - ./.env
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: root
+    volumes:
+      - db_postgres:/var/lib/postgresql/data
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: pg-admin
+    restart: always
+    ports:
+      - "8080:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - postgres
+    links:
+      - postgres
+
+  node_service:
+    restart: always
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    ports:
+      - '3001:3001'
+      - '9229:9229'
+    volumes:
+      - .:/home/node/app
+    depends_on:
+      - postgres
+      - mongo
+    links:
+      - postgres
+      - mongo

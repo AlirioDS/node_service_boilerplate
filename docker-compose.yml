@@ -1,0 +1,7 @@
+version: "3.8"
+
+services:
+  node_service:
+    container_name: node-services
+    env_file:
+      - ./.env
